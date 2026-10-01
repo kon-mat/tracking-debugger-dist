@@ -69,9 +69,9 @@ Zanim stwierdzisz, że czegoś nie było, sprawdź kolejno: werdykt jest zielony
 
 ## Etapy i eksport
 
-Pasek **Etap** ustawia etykietę, którą dostają kolejne zapisywane pozycje: `home`, `product`, `add-to-cart`, `checkout`, `payment`, `thank-you`, `post-purchase` albo własna nazwa wpisana obok. Po etapie można filtrować, a eksport potrafi zapisać osobny plik na każdy etap.
+Pasek **Etap** ustawia etykietę, którą dostają kolejne zapisywane pozycje: `home`, `product`, `add-to-cart`, `checkout`, `payment`, `thank-you`, `post-purchase` albo własna nazwa wpisana obok. Po etapie można filtrować, a przycisk **Po jednym pliku na etap** zapisuje osobny plik na każdy etap.
 
-Przyciski **JSON**, **Markdown** i **CSV** zapisują plik do podkatalogu `tracking-debugger/` w folderze pobierania, pod nazwą `td-<domena>-<RRRR-MM-DD-HHMM>-<etap>.<ext>`. JSON zawiera pełny stan, Markdown jest czytelny dla człowieka i pogrupowany po etapach, CSV to same żądania pomiarowe, jeden wiersz na hit.
+Przyciski **JSON**, **Markdown** i **CSV** w sekcji **Etap i eksport** (zwinięta sekcja pokazuje skróty JSON, MD, CSV) zapisują plik do podkatalogu `tracking-debugger/` w folderze pobierania, pod nazwą `td-<domena>-<RRRR-MM-DD-HHMM>-<etap>.<ext>`. JSON zawiera pełny stan, Markdown jest czytelny dla człowieka i pogrupowany po etapach, CSV to same żądania pomiarowe, jeden wiersz na hit.
 
 Każdy eksport zaczyna się nagłówkiem z adresem, oknem czasowym, etapem, profilem i aktywnymi filtrami, a pod nim idą liczniki rzetelności: od kiedy dane są wiarygodne, ile pozycji wypadło przez limit, ile ramek nie miało sondy, ile wiadomości protokołu było nieczytelnych. Bez tych liczb odbiorca nie odróżni „nie było” od „nie zobaczyłem”.
 
