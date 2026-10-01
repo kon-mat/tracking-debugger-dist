@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tracking Debugger — konfiguracja</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <header>
+    <h1>Tracking Debugger — konfiguracja</h1>
+    <p class="lead">
+      Narzędzie działa bez konfiguracji na dowolnej stronie. Konfiguracja dokłada trzy rzeczy:
+      rozpoznanie <strong>Twojego kontenera serwerowego</strong>, nazwy <strong>własnych narzędzi pomiarowych</strong>
+      i czytelne <strong>etykiety pikseli</strong>. Nic nie opuszcza przeglądarki.
+    </p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Wykryte kontenery serwerowe</h2>
+      <p class="opis">
+        Hosty, które wyglądają na kontener serwerowy (ścieżki <code>/g/collect</code>, <code>/gtm.js</code>,
+        <code>/gtag/js</code>, <code>/data</code>), a nie ma ich jeszcze w konfiguracji. Dodaj jednym kliknięciem —
+        od tej chwili ich żądania będą opisane jako kontener serwerowy, z rozbiciem parametrów.
+      </p>
+      <div id="wykryte" class="wykryte"></div>
+      <div class="rzad">
+        <button id="btnOdswiezWykryte" class="drugorzedny">Odśwież listę</button>
+        <button id="btnWyczyscWykryte" class="drugorzedny">Wyczyść listę</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Profile projektów</h2>
+      <p class="opis">
+        Profil dopasowuje się <strong>po domenie karty</strong>. Ustawienia profilu dokładają się do globalnych,
+        nie zastępują ich. Jeden profil na klienta czy sklep — dzięki temu ten sam plik rozszerzenia obsługuje wszystkie projekty.
+      </p>
+      <div class="rzad">
+        <label for="wymuszonyProfil">Profil aktywny:</label>
+        <select id="wymuszonyProfil"></select>
+        <span class="pomoc">„automatycznie" = wybór po domenie otwartej karty.</span>
+      </div>
+      <div id="profile"></div>
+      <div class="rzad">
+        <input id="nazwaNowegoProfilu" type="text" placeholder="nazwa nowego profilu (np. sklep-pl)" />
+        <button id="btnDodajProfil">Dodaj profil</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Ustawienia globalne</h2>
+      <p class="opis">Obowiązują na każdej stronie, niezależnie od profilu.</p>
+      <div id="globalne"></div>
+    </section>
+
+    <section>
+      <h2>Zachowanie</h2>
+      <div class="rzad">
+        <label><input type="checkbox" id="autoWykrywanieSgtm" /> Rozpoznawaj kontener serwerowy na domenie strony automatycznie</label>
+      </div>
+      <div class="rzad">
+        <label><input type="checkbox" id="zbierajWlasneDomeny" /> Zbieraj żądania XHR/fetch do domeny badanej strony (szuflada „Domena strony")</label>
+      </div>
+      <div class="rzad">
+        <label for="limitPozycji">Limit pozycji na listę:</label>
+        <input id="limitPozycji" type="number" min="100" max="200000" step="500" />
+        <span class="hint">Domyślnie 20 000 — sesja zakupowa jest długa. Po przekroczeniu limitu najstarsze pozycje
+        są usuwane bezpowrotnie, a Diagnostyka pokazuje to na czerwono.</span>
+        <span class="pomoc">Po przekroczeniu najstarsze pozycje znikają, a panel to zgłasza w Diagnostyce.</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kopia i przenoszenie</h2>
+      <p class="opis">
+        Eksport zapisuje całą konfigurację do pliku JSON — ten sam format, co pliki w katalogu <code>profiles/</code> repozytorium.
+        Import <strong>dokłada</strong> zawartość pliku do bieżącej konfiguracji (nie kasuje istniejących profili).
+      </p>
+      <div class="rzad">
+        <button id="btnEksport">Eksportuj do pliku</button>
+        <button id="btnImport" class="drugorzedny">Importuj z pliku</button>
+        <input id="plikImportu" type="file" accept="application/json,.json" hidden />
+        <button id="btnReset" class="niebezpieczny">Przywróć ustawienia domyślne</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <button id="btnZapisz" class="glowny">Zapisz</button>
+    <span id="stanZapisu" class="stan"></span>
+  </footer>
+
+  <script src="../lib/konfiguracja.js"></script>
+  <script src="../lib/analiza.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

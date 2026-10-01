@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tracking Debugger</title>
+  <link rel="stylesheet" href="panel.css" />
+</head>
+<body>
+  <!-- Nagłówek trybu prezentacji: widoczny tylko przy ?prezentacja=1.
+       Ma sprawić, żeby zrzut ekranu tłumaczył się sam po wklejeniu do raportu. -->
+  <section id="naglowekPrezentacji" class="prezentacja-naglowek" hidden>
+    <div class="pn-tytul">Tracking Debugger <span id="pnWersja" class="pn-wersja"></span></div>
+    <div class="pn-wiersz"><span class="pn-etykieta" data-en="Site">Badana strona</span><span id="pnDomena"></span></div>
+    <div class="pn-wiersz"><span class="pn-etykieta" data-en="Capture window">Okno czasowe zapisu</span><span id="pnOkno"></span></div>
+    <div class="pn-wiersz"><span class="pn-etykieta" data-en="Stage">Etap</span><span id="pnEtap"></span></div>
+    <div class="pn-wiersz"><span class="pn-etykieta" data-en="Data reliable from">Dane wiarygodne od</span><span id="pnWiarygodne"></span></div>
+    <div class="pn-wiersz"><span class="pn-etykieta" data-en="Reliability counters">Liczniki rzetelności</span><span id="pnRzetelnosc"></span></div>
+    <div class="pn-wiersz"><span class="pn-etykieta" data-en="Active filters">Aktywne filtry</span><span id="pnFiltry"></span></div>
+  </section>
+
+  <header id="pasekGorny">
+    <div class="row">
+      <strong class="brand">Tracking Debugger</strong>
+      <select id="wyborKarty" hidden title="Karta, którą obserwujesz"></select>
+      <span id="infoKarty" class="muted ellipsis"></span>
+      <span class="spacer"></span>
+      <button id="btnTrybPracy" class="ikona" title="Tryb pracy: zwiń wszystkie sekcje nad listą (drugi klik je rozwija)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="lbl">Tryb pracy</span></button>
+      <button id="btnPauza" class="ikona" title="Wstrzymaj odświeżanie widoku (zbieranie trwa dalej)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><span class="lbl">Pauza</span></button>
+      <button id="btnWyczysc" class="ikona" title="Wyczyść zebrane dane tej karty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="lbl">Wyczyść</span></button>
+      <button id="btnKopiuj" class="ikona" title="Skopiuj widoczne (po filtrach) pozycje jako JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg><span class="lbl">Kopiuj widoczne</span></button>
+      <button id="btnOkno" class="ikona" title="Otwórz panel w osobnym oknie"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18"/></svg><span class="lbl">Okno</span></button>
+      <button id="btnOpcje" class="ikona" title="Konfiguracja: profile projektów, domena kontenera serwerowego, własne narzędzia"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span class="lbl">Opcje</span></button>
+    </div>
+  </header>
+
+  <!-- Sekcje nad listą. Każda zwija się do jednej linii ze skrótem stanu (.sek-skrot), więc zwinięta
+       nadal mówi, co się w niej dzieje. Stan zwinięcia pamięta localStorage. Blok ma limit wysokości,
+       żeby rozwinięte sekcje nigdy nie zabrały liście całego ekranu. -->
+  <div id="sekcjeGorne">
+    <section id="pasekEtapu" class="box sekcja" data-sekcja="etap">
+      <div class="sek-glowa">
+        <button class="sek-przelacz" aria-expanded="true" title="Zwiń / rozwiń"><span class="sek-strzalka">▾</span><span class="label" data-en="Stage / export">Etap i eksport</span></button>
+        <span id="skrotEtapu" class="sek-skrot chips"></span>
+      </div>
+      <div class="sek-tresc">
+        <div class="row wrap">
+          <span class="label" data-en="Stage">Etap</span>
+          <span id="etapyPrzyciski" class="chips"></span>
+          <input id="etapWlasny" type="text" placeholder="własny etap" maxlength="40" size="14" />
+          <button id="btnEtapUstaw" class="small">Ustaw</button>
+          <button id="btnEtapWyczysc" class="small">Bez etapu</button>
+          <span id="etapAktywny" class="meta"></span>
+        </div>
+        <div id="pasekEksportu" class="row wrap">
+          <span class="label" data-en="Export">Eksport</span>
+          <button id="btnEksportJson" class="small" title="Pełny stan, maszynowo czytelny">JSON</button>
+          <button id="btnEksportMd" class="small" title="Wersja czytelna dla człowieka, pogrupowana po etapach">Markdown</button>
+          <button id="btnEksportCsv" class="small" title="Same żądania pomiarowe, jeden wiersz na hit">CSV</button>
+          <button id="btnEksportEtapy" class="small" title="Osobny plik na każdy etap, we wszystkich trzech formatach">Po jednym pliku na etap</button>
+          <label class="chk" title="Maskuje dane osobowe, tokeny i obce hosty widocznym ***"><input type="checkbox" id="redakcja" checked /> tryb redakcji (dla klienta)</label>
+          <span id="statusEksportu" class="meta"></span>
+        </div>
+      </div>
+    </section>
+
+    <section id="pasekDiag" class="box diag sekcja" data-sekcja="diag">
+      <div class="sek-glowa">
+        <button class="sek-przelacz" aria-expanded="true" title="Zwiń / rozwiń"><span class="sek-strzalka">▾</span><span class="label" data-en="Diagnostics">Diagnostyka</span></button>
+        <span id="skrotDiag" class="sek-skrot chips"></span>
+      </div>
+      <div class="sek-tresc">
+        <!-- Werdykt: jedno zdanie mowiace, czy wolno wierzyc zerom w licznikach. Pierwsza rzecz do przeczytania. -->
+        <div id="werdykt" class="werdykt"></div>
+        <div class="row wrap">
+          <span id="chipyDiag" class="chips"></span>
+          <span class="spacer"></span>
+          <button id="btnSzczegolyDiag" class="small">Szczegóły</button>
+        </div>
+        <div id="ostrzezenia" class="warnings"></div>
+        <div id="ukryteOstrzezenia" class="ukryte tiny muted" hidden></div>
+        <div id="szczegolyDiag" class="diag-details" hidden></div>
+      </div>
+    </section>
+
+    <section id="pasekZgody" class="box sekcja" data-sekcja="zgoda">
+      <div class="sek-glowa">
+        <button class="sek-przelacz" aria-expanded="true" title="Zwiń / rozwiń"><span class="sek-strzalka">▾</span><span class="label" data-en="Consent">Zgoda</span></button>
+        <span id="skrotZgody" class="sek-skrot chips"></span>
+      </div>
+      <div class="sek-tresc">
+        <div class="row">
+          <span class="label" data-en="Consent now">Zgoda teraz</span>
+          <span id="zgodaGtag" class="chips"></span>
+          <span id="zgodaGcs" class="chips"></span>
+          <span class="spacer"></span>
+          <button id="btnHistoriaZgody" class="small">Historia (0)</button>
+        </div>
+        <div class="row">
+          <span class="label">Shopify / CMP</span>
+          <span id="zgodaShopify" class="chips"></span>
+          <span id="zgodaCmp" class="chips"></span>
+        </div>
+        <ol id="historiaZgody" class="history" hidden></ol>
+      </div>
+    </section>
+
+    <section id="sekcjaLicznikow" class="box sekcja" data-sekcja="licznik">
+      <div class="sek-glowa">
+        <button class="sek-przelacz" aria-expanded="true" title="Zwiń / rozwiń"><span class="sek-strzalka">▾</span><span class="label" data-en="Event counter">Licznik zdarzeń</span></button>
+        <span id="skrotLicznika" class="sek-skrot chips"></span>
+      </div>
+      <div class="sek-tresc">
+        <div class="row wrap"><span id="licznikZdarzen" class="chips"></span></div>
+        <div class="row wrap tiny muted"><span>∅ = żaden sandbox nie subskrybuje tego zdarzenia. Zero w liczniku NIE dowodzi, że zdarzenie nie wystąpiło — natywne kanały mogły je dostać. Zdarzenia własne (custom) dopisują się na końcu.</span></div>
+      </div>
+    </section>
+  </div>
+
+  <section id="sekcjaFiltrow" class="box">
+    <div class="row wrap">
+      <span class="label" data-en="Platform">Platforma</span>
+      <span id="filtryPlatform" class="chips" title="Filtr platform zawęża żądania. Zdarzenia strony zawężasz polami Shopify / consent / dataLayer."></span>
+    </div>
+    <div class="row wrap">
+      <span class="label" data-en="Type">Typ</span>
+      <select id="filtrTypu"><option value="">wszystkie typy</option></select>
+      <select id="filtrEtapu"><option value="">wszystkie etapy</option></select>
+      <input id="szukaj" type="search" placeholder="szukaj w treści (np. eid, gcs, transaction, host)" />
+      <label class="chk"><input type="checkbox" id="zrShopify" checked /> Shopify</label>
+      <label class="chk"><input type="checkbox" id="zrZgoda" checked /> consent</label>
+      <label class="chk"><input type="checkbox" id="zrDl" checked /> dataLayer/gtag/publish</label>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button data-zakladka="wszystko" class="active" title="Zdarzenia strony i żądania do platform na jednej osi czasu">Wszystko <span id="licznikZakladkiWszystko" class="cnt">0</span></button>
+    <button data-zakladka="zdarzenia" title="Co strona mówi: dataLayer, gtag, Shopify web pixel, publish. Wywołań fbq / ttq / uetq tu nie ma — widać je jako żądania.">Zdarzenia <span id="licznikZakladkiZdarzen" class="cnt">0</span></button>
+    <button data-zakladka="zadania" title="Co faktycznie wyszło z przeglądarki do platform">Żądania <span id="licznikZakladkiZadan" class="cnt">0</span></button>
+    <button data-zakladka="piksele">Piksele <span id="licznikZakladkiPikseli" class="cnt">0</span></button>
+  </nav>
+
+  <main>
+    <div id="panelWszystko" class="pane">
+      <ul id="listaWszystko" class="list"></ul>
+      <p id="pustoWszystko" class="empty">Brak zdarzeń i żądań. Odśwież obserwowaną kartę.</p>
+    </div>
+    <div id="panelZdarzen" class="pane" hidden>
+      <ul id="listaZdarzen" class="list"></ul>
+      <p id="pustoZdarzenia" class="empty">Brak zdarzeń. Odśwież obserwowaną kartę — na sklepie Shopify zdarzenia web pixel pojawią się przy <code>page_viewed</code>.</p>
+    </div>
+    <div id="panelZadan" class="pane" hidden>
+      <div class="note" data-en="Boundary of visibility. You see the browser to server leg only. What your server-side container forwards on to Meta, Google or Microsoft is NOT visible in the browser — check that in the container logs (Stape: Logs, Outgoing requests) or in its preview mode. No request of this tab is dropped silently: unknown hosts land in Other, dynamic requests to the site domain in Site domain, and static resources are counted per host (Diagnostics, Details).">
+        <strong>Granica widoczności.</strong> Widzisz wyłącznie ruch <em>przeglądarka → serwer</em>. Co Twój kontener serwerowy
+        wysyła dalej do Meta, Google czy Microsoft, <strong>nie jest widoczne w przeglądarce</strong> — sprawdzisz to w logach
+        kontenera (Stape → <em>Logs → Outgoing requests</em>) albo w jego trybie podglądu.
+        Żadne żądanie karty nie jest odrzucane po cichu: nieznane hosty lądują w <em>Inne</em>, dynamiczne żądania do domeny strony
+        w <em>Domena strony</em>, a zasoby statyczne są liczone per host (Diagnostyka → Szczegóły).
+      </div>
+      <details id="sekcjaHostow" class="hosts">
+        <summary>Hosty w szufladzie „Inne" (<span id="liczbaObcych">0</span>) i pominięte zasoby (<span id="liczbaPominietych">0</span>)</summary>
+        <div id="hostyObce" class="hostlist"></div>
+        <div id="hostyPominiete" class="hostlist muted"></div>
+      </details>
+      <ul id="listaZadan" class="list"></ul>
+      <p id="pustoZadania" class="empty">Brak żądań dla tej karty.</p>
+    </div>
+    <div id="panelPikseli" class="pane" hidden>
+      <div class="note" data-en="Shopify web pixel sandbox registrations (remote-ui protocol). App pixels run as Workers (STRICT), custom pixels as iframes (LAX). Native store channels (for example Facebook &amp; Instagram, Google &amp; YouTube) run as scripts in the main frame and do not register here — their requests are in the Requests tab.">
+        Rejestracje sandboksów web pixel Shopify (protokół remote-ui). App pixele = Workery (STRICT), custom pixele = iframe'y (LAX).
+        Natywne kanały sklepu (np. Facebook &amp; Instagram, Google &amp; YouTube) chodzą jako skrypty w ramce głównej i nie rejestrują się tutaj —
+        ich żądania widać w zakładce Żądania.
+      </div>
+      <div id="piksele"></div>
+      <p id="pustoPiksele" class="empty">Brak zarejestrowanych pikseli. Na sklepie Shopify odśwież kartę; poza Shopify ta zakładka pozostaje pusta.</p>
+    </div>
+  </main>
+
+  <script src="../lib/konfiguracja.js"></script>
+  <script src="../lib/analiza.js"></script>
+  <script src="../lib/eksport.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Tracking Debugger",
+  "version": "1.2.0",
+  "description": "Podglad na zywo zdarzen web pixel Shopify i wychodzacych zadan pomiarowych (sGTM, Meta, GA4, Google Ads, Microsoft, Clarity, TikTok) z rozbiciem parametrow, eksportem dowodowym do pliku i kontrola, czego narzedzie NIE widzi.",
+  "minimum_chrome_version": "119",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqIiv0nycBYpNMz46UeHHZnJS7FIHGc2xsI0fK0HW3TL+G2jOkgdcsTdqAEyRGxSSAKqbbcvsIJtL2C8FNcXS36lKn4QSrxXWEFL4CSrg5h6AsdrbAZd+hqFrWiOmKyPd1gu78eS2YLFoWanfyn+1FMNe1nBVt2QtRyjysqoCneLh/vVB4gOB3pOtIG7IIuZu1Z/RQMgXyL1iL9h6wlaf1nqh+9f9oGC3Gq9XGgZULGbhgyME6TQqnT6Ueqd5ejjvbQlv0GISWADETXB7Mlroj+7/dzf2JtTryF0/7+dK46GQ+4ILPX8pZH5J3v4atYsOoEiYEU9RZpG9NWC8BqlHyQIDAQAB",
+  "permissions": ["webRequest", "webNavigation", "storage", "tabs", "sidePanel", "scripting", "downloads"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "tlo.js"
+  },
+  "action": {
+    "default_title": "Tracking Debugger - otworz panel boczny"
+  },
+  "options_page": "options/options.html",
+  "side_panel": {
+    "default_path": "panel/panel.html"
+  },
+  "icons": {
+    "16": "icons/ikona-16.png",
+    "48": "icons/ikona-48.png",
+    "128": "icons/ikona-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "all_frames": true,
+      "match_origin_as_fallback": true,
+      "run_at": "document_start",
+      "world": "MAIN",
+      "js": ["content/sonda.js"]
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "all_frames": false,
+      "run_at": "document_start",
+      "js": ["content/most.js"]
+    }
+  ]
+}
